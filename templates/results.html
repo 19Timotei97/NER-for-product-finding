@@ -1,0 +1,43 @@
+<!-- Model results page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <style>
+        pre {
+            white-space: pre-wrap;  /* Preserve newlines and wrap text */
+        }
+    </style>
+</head>
+<body>
+    <h1>Entities found in the URL</h1>
+    <!-- Quick code I got from GPT to download a json - will look more into it -->
+    <button onclick="downloadJson()">Download as JSON</button>
+    <p>Results in JSON format:</p>
+    <pre>{{ results|safe }}</pre>
+
+    <script>
+        function downloadJson() {
+            var results = {{ results|tojson }};
+            var xhr = new XMLHttpRequest();
+
+            xhr.open('POST', '/download-json', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.responseType = 'blob';
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    var blob = xhr.response;
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'products_from_url.json';
+                    link.click();
+                }
+            };
+            xhr.send(JSON.stringify({ results: results }));
+        }
+    </script>
+
+</body>
+</html>
