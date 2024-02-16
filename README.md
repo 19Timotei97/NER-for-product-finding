@@ -459,7 +459,5 @@ There are many things that could be changed / enhanced:
    5. The code is not optimal, lost of it could be re-used, not re-written, and the complexity of some methods is too big.
    6. The Flask app is extremely limited and lacks any *sparks*.
 2. Did I enjoy it? YES. I really liked that it challenged me in trying different solutions for a problem, 
-understand (kinda) why a thing worked, and why it didn't, and 
+understand (kinda) why a thing worked, and why it didn't, etc.
 3. Would I do it again / on a daily basis? OF COURSE. It is an amazing feeling of finally getting past a problem after some hours of debugging and re-assessing your life decisions.
-
-I can sincerely say (regardless of the response), THANK YOU! For choosing me to solve this project, for challenging me, for (indirectly) teaching me a lot of new stuff and for exposing me to your way of working! :)
