@@ -42,21 +42,21 @@ class DatasetLabeller:
 
             return title.lower()
         except Exception as e:
-            # print(f"Couldn't get the title of url {url}, got error {str(e)}")
             logging.error(f"Couldn't get the title of url {url}, got error {str(e)}")
 
             return ""
 
     def label_url_content(self, csv_to_be_saved):
         """
-        For each link in the csv file
-            Get its title -> soup or smth else
-            Split the text for that url into sentences
-            Then split sentences into words
-            Create a label of '0' (OUTSIDE) for the length of words list
-                if we got a word from the title -> label as 'B-PRODUCT' (1)
-                if the previous token label was 1 or 2 ('I-PRODUCT') and word from the title -> label as 'I-PRODUCT' (2)
-        label the text like so
+        Strategy for labeling products from the pages
+
+        For each link in the csv file:
+            1. Get its title -> using BeautifulSoup or similar
+            2. Split the text for that url into sentences
+            3. Then split the resulted sentences into words
+            4. Create a label of '0' (OUTSIDE) for the length of words list:
+                4.1 If we got a word from the title -> label as 'B-PRODUCT'
+                4.2 If the previous token label was 1 or 2 ('I-PRODUCT') and got a word from the title -> label as 'I-PRODUCT'
         """
         df = pd.read_csv(self.csv)
 
@@ -66,7 +66,6 @@ class DatasetLabeller:
 
         for url, content in zip(urls, contents):
             labels_content = []
-            # print(f"REACHED URL {url}\n...")
             logging.info(f"REACHED URL {url}\n...")
 
             title_url_words = self.grab_url_title(url).split()
@@ -75,20 +74,16 @@ class DatasetLabeller:
             # content_sentences = [sentence.split("\n") for sentence in content_sentences if '\n' in sentence]
             # content_sentences = [sentence for sentence in content_sentences]
 
-            # print(f"Found {len(content_sentences)} SENTENCES\n")
             logging.info(f"Found {len(content_sentences)} SENTENCES\n")
 
             # using IOB2 labeling scheme
             for idx, sentence in enumerate(content_sentences):
                 words = sentence.lower().split()
-                # print(f"Found WORDS {words} IN SENTENCE {idx + 1}")
                 logging.info(f"Found WORDS {words} IN SENTENCE {idx + 1}")
 
                 label = [0] * len(words)
-                # print(len(label))
 
                 label = [1 if word in title_url_words else 0 for word in words]
-                # print(len(label))
 
                 # Tried using list comprehension, but didn't really worked - TODO: try to fix this to work
                 # if len(label) > 2:
@@ -101,12 +96,10 @@ class DatasetLabeller:
                         #  we are still in the product name (either B-eginning or I-nside)
                         if words[elem] in title_url_words and label[elem - 1] > 0:
                             label[elem] = 2
-                # print(len(label))
-                # print(label, "\n\n")
+
                 labels_content.extend(label)
 
             labels.append(labels_content)
-            # print("-------")
 
         # print(labels)
         df['label'] = pd.Series(labels)  # add the new 'label' column to the dataset
@@ -117,10 +110,8 @@ class DatasetLabeller:
 
 def label_dataset():
     args = parser.parse_args()
-    # labeler = DatasetLabeller('dataset.csv')
-    labeler = DatasetLabeller(args.path_to_csv)
 
-    # labeler.label_url_content('labeled_dataset.csv')
+    labeler = DatasetLabeller(args.path_to_csv)
     labeler.label_url_content(args.path_to_save_labeled_csv)
 
 

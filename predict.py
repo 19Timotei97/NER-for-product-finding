@@ -23,7 +23,6 @@ class Predictor:
     def __init__(self):
         self.ssl_context = ssl.SSLContext()
         self.header = {'User-Agent': 'Mozilla/5.0'}
-        # self.ner = pipeline("ner", model='model_distilbert_ner_finetuned')
         self.ner = pipeline("ner", model="TimoteiB/DistilBERT_NER_furniture")
 
     def grab_url_pages(self, url):
@@ -81,7 +80,6 @@ class Predictor:
 
             entities_in_urls[url] = url_entities
 
-        # logging.info(entities_in_urls)
         return entities_in_urls
 
     # TODO: create method to grab pages from a URL and do inference on that
@@ -105,6 +103,7 @@ class Predictor:
                     entities.append(pred['word'])
 
         return entities
+
 
 # Other ideas I had:
 # Maybe create a dict -> json with url -> entities (for links that actually work)

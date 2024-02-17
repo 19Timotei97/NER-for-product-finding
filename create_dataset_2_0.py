@@ -1,4 +1,5 @@
 import random
+import string
 import torch
 from torch.utils.data import Dataset
 import os
@@ -24,13 +25,69 @@ class CrawlingDataset(Dataset):
     def __len__(self) -> int:
         return len(self.text)
 
+    def random_trim(self, text: str) -> str:
+        """Randomly takes the part before a `-` (dash) and skips the rest
+
+        Args:
+            text (str): the input text
+
+        Returns:
+            str: the possibly modified text
+        """
+        if random.uniform(0, 1) < 0.3:
+            text = text.split('-')[0]
+
+        return text
+
+    def random_noise(self, text: str, label: int) -> Tuple[str, int]:
+        """Replaces the text with a random "noisy" ASCII sequence
+
+        Args:
+            text (str): the input text
+            label (int): the input label
+
+        Returns:
+            Tuple(str, int): a possibly modified text & label
+        """
+        if random.uniform(0, 1) < 0.04:
+            text = ''.join(random.choices(string.printable, k=random.randint(1, 10)))
+            label = 0
+
+        return text, label
+
+    def random_delete(self, text: str, label: int) -> Tuple[str, int]:
+        """ Randomly deletes elements from a sequence
+
+        Args:
+            text (str): the input text
+            label (int): the input label
+
+        Returns:
+            Tuple(str, int): a possibly modified text & label
+        """
+        if random.uniform(0, 1) > .3:
+            return text, label
+
+        text = text.split(' ')
+        num_elems = random.randint(1, min(3, len(text)))
+
+        for i in range(num_elems):
+            rand_idx = random.randrange(len(text))
+            text.pop(rand_idx)
+
+        if len(text) <= 1:
+            label = 0
+        text = ' '.join(text)
+
+        return text, label
+
     def __getitem__(self, idx: int) -> dict:
         text = self.text[idx]
         label = self.label[idx]
 
-        # text = self.random_trim(text)
-        # text, label = self.random_delete(text, label)
-        # text, label = self.random_noise(text, label)
+        text = self.random_trim(text)
+        text, label = self.random_delete(text, label)
+        text, label = self.random_noise(text, label)
 
         inputs = self.tokenizer.encode_plus(
             text,

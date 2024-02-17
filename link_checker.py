@@ -22,12 +22,10 @@ class LinkChecker:
         df = pd.read_csv(self.csv_file)
         self.links = [df['max(page)'][i] for i in range(len(df))]
 
-        # print(f"Got {len(self.links)} total links\n")
         logging.info(f"Got {len(self.links)} total links\n")
 
     def check_links(self):
         if len(self.links) == 0:
-            # print("Make sure to run get_links_from_csv before running this method!")
             logging.error("Make sure to run get_links_from_csv before running this method!")
 
             return
@@ -38,14 +36,12 @@ class LinkChecker:
             try:
                 resp = requests.head(link_)
             except Exception as e:  # I know, not the best way to catch exceptions, I should be more specific.
-                # print(f"Got EXCEPTION {str(e)} for link {link_}!")
                 logging.warning(f"Got EXCEPTION {str(e)} for link {link_}!")
 
                 self.not_working_links.append(link_)
             else:
                 # Add the link to the good list of links if it responded to the request
                 if 200 == resp.status_code:
-                    # print(f"Link {link_} is fine.")
                     logging.info(f"Link {link_} is fine.")
 
                     self.good_links.append(link_ + "\n")
@@ -59,7 +55,6 @@ class LinkChecker:
 
     def write_good_links_to_txt(self, path: str):
         if 0 == len(self.good_links):
-            # print("No good links found!")
             logging.warning("No good links found!")
             return
 
@@ -69,7 +64,7 @@ class LinkChecker:
 
 def start_checking_links():
     args = parser.parse_args()
-    # link_checker = LinkChecker('furniture stores pages.csv')
+
     link_checker = LinkChecker(args.path_to_csv)
 
     # Grab links from csv file
@@ -78,15 +73,10 @@ def start_checking_links():
     # Check for broken / unreachable links
     link_checker.check_links()
 
-    # print(f"Got {len(link_checker.not_working_links)} avoidable links!")
-    # print(f"Got {len(link_checker.bad_links)} bad links (code != 200)!")
-    # print(f"Got {len(link_checker.good_links)} good links!")
-
     logging.info(f"Got {len(link_checker.not_working_links)} avoidable links!")
     logging.info(f"Got {len(link_checker.bad_links)} bad links (code != 200)!")
     logging.info(f"Got {len(link_checker.good_links)} good links!")
 
-    # link_checker.write_good_links_to_txt('good_links.txt')
     link_checker.write_good_links_to_txt(args.path_for_text_file)
 
 

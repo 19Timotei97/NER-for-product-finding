@@ -34,9 +34,7 @@ class DatasetCreator:
     def get_all_linked_furnitures_websites(self, url: str) -> list:
         # Start with the main url in the list.
         linked_furniture_urls = [url]
-        # print(f"Trying url {url}...")
         logging.info(f"Trying url {url}...")
-
 
         try:
             req = urllib.request.Request(url, headers=self.header)
@@ -53,17 +51,14 @@ class DatasetCreator:
                 if any([furniture_type in link for furniture_type in furniture_products]):
                     linked_furniture_urls.append(link)
 
-            # print(f"Grabbed {len(linked_furniture_urls[1:])} useful links.")
             logging.info(f"Grabbed {len(linked_furniture_urls[1:])} useful links.")
 
         except Exception as e:
-            # print(f"Error {str(e)} for url {url}")
             logging.error(f"Error {str(e)} for url {url}")
 
         # Get 5 of all included links (or all if less than 5)
         if len(linked_furniture_urls) < 6:
             # 6 because it includes the main url
-            # print("Less than 6 sites")
             logging.info("Less than 6 sites")
 
             return linked_furniture_urls
@@ -72,7 +67,6 @@ class DatasetCreator:
 
     def get_urls(self):
         if 0 == len(self.urls):
-            # print("Please upload a valid list of urls (At least one!)")
             logging.error("Please upload a valid list of urls (At least one!)")
             return
 
@@ -80,10 +74,6 @@ class DatasetCreator:
         url_with_urls = [self.get_all_linked_furnitures_websites(url) for url in self.urls]
         # Only leave the urls with at least a useful link (some of them don't have any of the furniture types)
         url_with_urls = [url for url_list in url_with_urls for url in url_list if len(url_list) > 1]
-
-        # Just for debug
-        # for link in url_with_urls:
-        #     print(link)
 
         return url_with_urls
 
@@ -94,9 +84,6 @@ class DatasetCreator:
 def get_content_from_url(url) -> str:
     html = trafilatura.fetch_url(url)
     url_content = re.sub(r" +", " ", str(trafilatura.extract(html, include_comments=False)))
-
-    # print(url_content)
-    # print("\n\n")
 
     # There may be more elegant solutions for this, but I just got the text up until the
     #  max length of the tokenizer that will be used
@@ -126,9 +113,6 @@ def label_dataset():
     df.drop(indices, inplace=True)
     # print(df[df.columns[0]].count())
 
-    # df.to_csv(path_or_buf="./dataset.csv",
-    #           sep=',',
-    #           index=False)
     df.to_csv(path_or_buf=args.path_to_save_csv,
               sep=',',
               index=False)

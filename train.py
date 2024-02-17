@@ -27,7 +27,6 @@ def train():
     args = parser.parse_args()
 
     # Read the labeled dataset
-    # df = pd.read_csv('labeled_dataset.csv')
     df = pd.read_csv(args.path_to_dataset_file)
     logging.info("Loaded the csv dataset file!")
 
@@ -48,6 +47,11 @@ def train():
 
     tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased', do_lower_case=True)
     model = AutoModelForTokenClassification.from_pretrained('distilbert-base-uncased', num_labels=3, id2label=id2label, label2id=label2id)
+
+    """
+    tokenizer = AutoTokenizer.from_pretrained("distilbert/distilroberta-base")
+    model = AutoModelForMaskedLM.from_pretrained("distilbert/distilroberta-base")
+    """
 
     # Only get the max length of the model from tokens, no point going further
     train_tokens = [text[:tokenizer.model_max_length].lower().split() for text in train_df['text']]
