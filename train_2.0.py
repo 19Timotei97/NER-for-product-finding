@@ -34,7 +34,7 @@ for param in model.backbone.parameters():
 model.to(device)
 
 train_dataset, val_dataset, neg_pos_ratio = create_dataset_2_0.load_dataset(
-    json_path='formatted',
+    json_path='datasets/formatted_dataset',
     tokenizer=tokenizer,
     max_len=MAX_LEN,
     split_percent=0.95

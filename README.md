@@ -10,8 +10,8 @@ Even though I will detail what I did here, there are also comments in each of th
 to detail my thought process.
 I added the `requirements.txt` file with the packages used throughout this project.
 
-### link_checker
-In order to use URLs from a list stored in `furniture store pages.csv`,
+### link_checker.py
+In order to use URLs from a list stored in `data/furniture store pages.csv`,
 I wanted to check which links can actually be used to grab info from.
 Found out that from 704 links, only 197 actually returned HTTP code 200 (OK),
 and could be reached. How did I get that number of links?
@@ -21,16 +21,16 @@ and could be reached. How did I get that number of links?
    1. If the request throws an exception -> avoid that link.
    2. If the request returns 200 HTTP code -> store that link as a good one.
    3. If the request returns ANY other HTTP code -> that link cannot be used, so avoid it.
-4. Store the good links in a text file, for easy access (`good_links.txt`).
+4. Store the good links in a text file, for easy access (`data/good_links.txt`).
 During the link checking, the outputs were telling me which URLs were good to go
-![image info](link_checking.PNG)
+![image info](readme_images/link_checking.PNG)
 There wasn't a lot of trial and error here, because the flow was pretty straight forward. I
 have to add that this was my very FIRST time actually grabbing information from URLS,
 so I already learned something new. :)
 This script was created just for my convenience, it could be run by `python link_checker.py --path_to_csv /path/to/csv/file/with/urls.csv --path_for_text_file /path/for/text/file/with/good/links.txt`.
 It will not work if the structure of the csv file is different from the one provided for the assignment, so this is already something to work on later for improvement.
 
-### create_dataset
+### create_dataset.py
 After I gathered a list of working URLs, the next step was to actually create a dataset in order to later train the model.
 At this step, the fun started :) I have tried several things before I could actually CORRECTLY grab the information
 from the URLs, including:
@@ -161,7 +161,7 @@ It is not by a long shot the best or most elegant solution, but it worked for me
 "on the job". :D
 The script can be run using `python create_dataset.py --path_to_links_file /path/to/text/file/with/good/links.txt --path_to_save_csv /path/to/save/dataset/csv/file`
 
-### label_dataset
+### label_dataset.py
 Now here comes the fun part. How do I tag some of the products from the pages extracted?
 Well, I tried several things here too, only one of them (kinda) worked.
 1. I tried to be lazy about it at first, and tried using a pre-trained model to label the products from me.
@@ -371,7 +371,7 @@ Again, learned something new: you can use the words from the title of a URL to f
 Lots of good stuff from this project :)
 It can be either run in PyCharm, or in command line by using `python label_dataset.py --path_to_csv /path/to/csv/dataset/file.csv --path_to_save_labeled_csv /where/to/save/labeled/dataset.csv`
 
-### train
+### train.py
 Now when it comes to training, things were much more straight forward. Load the dataset, split it into train and val sets,
 load a model and a tokenizer (a new thing that's different from my everyday use of ML) - which is a model used
 to create tokens (a model's way of representing words - still learning the NLP ways, bear with me),
@@ -380,9 +380,9 @@ creates a more realistic label representation, by removing special characters - 
 create the custom datasets (with train and val data) + data collator (to batch-ify the inputs) and start the training.
 I have to say, this was the most fun part of this project, because is what I love to do the most - experimenting with ML models),
 and was also very nice to find how exactly NLP models are trained.
-The script train.py was created only to keep the training code in this format also, I mainly worked in a Google Colab notebook (Finetune_DistilBERT_NER_furniture.ipynb).
+The script train.py was created only to keep the training code in this format also, I mainly worked in a Google Colab notebook (`notebooks/Finetune_DistilBERT_NER_furniture.ipynb`).
 Why Colab? It gives me access to GPUs / TPUs and I don't have to stress myself with creating virtual environments. 
-I didn't make it a runnable script simply because I only did experiments in Google Colab.
+I didn't arrange it too much simply because I experimented mainly in Google Colab.
 There is also the option to see some graphs, performance metrics and checkpoints saved using TensorBoard, which I set it in the notebook:
 ```
 model_checkpoint = "distilbert-base-uncased"
@@ -411,12 +411,12 @@ The performance is ok, not great. At epoch 25, I got the following stats:
    "step": 350
 }`
 I added a png file to display how the Tensorboard was looking during training.
-![image info](tensorboard.PNG)
+![image info](readme_images/tensorboard.PNG)
 For this problem, I thought that the F1-score is the most important metric, due to the unbalanced number of 0 labels (corresponding to 'Outside').
 The loss is still pretty high (0.21), but more data and more training time should do the trick. I think under-sampling the 0-class should also help
 with the performance. Overall, I'm pretty happy with my very first 'working' NLP model :)
 
-### predict
+### predict.py
 The very last step of this project was to use the trained model to predict the products from unseen pages.
 I tried to re-use the code for extracting content from URLs and also for running the model (using HuggingFace's pipeline object).
 The results are ok-ish, in most cases, the product names are correctly tagged, although it may miss some of them or being way too confident in
@@ -460,4 +460,39 @@ There are many things that could be changed / enhanced:
    6. The Flask app is extremely limited and lacks any *sparks*.
 2. Did I enjoy it? YES. I really liked that it challenged me in trying different solutions for a problem, 
 understand (kinda) why a thing worked, and why it didn't, etc.
-3. Would I do it again / on a daily basis? OF COURSE. It is an amazing feeling of finally getting past a problem after some hours of debugging and re-assessing your life decisions.
+3. Would I do it again ? OF COURSE. It is an amazing feeling of finally getting past a problem after some hours of debugging and re-assessing your life decisions.
+
+
+### LE:
+Added some new files that make up another version of this project, inspired by a solution found online.
+This solution ditches the NER objective, and instead focuses on creating a BCE objective, in which
+a custom dataset is created, with product and non-product examples, labelled with 1 and 0, respectively.
+A custom BERT model is trained on these examples, freezing the backbone and adding 2 FC layers, that will be
+trained to predict if a text is present the name of a product or not.
+
+#### crawler.py
+This version of the crawler is able to grab information from a URL and its links (contents of `<a href=...>`) up to a certain depth (aka how much
+to search for links) and to a certain maximum number of links. The information is extract is very similar, using bs4 to grab the text
+from HTML tags of interest (mainly heading tags, since these are the most probable to contain product titles / names).
+
+#### create_dataset_2_0.py
+As its name says, this script creates a custom dataset based on the samples stored as JSON files and loads them at the training operation.
+It also applies some data augmentation techniques to the samples, like random character deletion, random ASCII character insertion (as noise)
+and random trim. It enhances the model's ability to correctly render an incomplete sentence and exposes the model to different situations.
+
+#### custom_model.py
+As I said, a new BERT model is created, modifying it to include 2 FC layers at the end, which will be trained to correctly classify
+samples as product (1) or non-product (0).
+
+#### train_2.0.py
+This training script is fairly similar to the one I originally created, only is raw, in which is not using a HuggingFace Trainer,
+rather a manual for loop through the DataLoader, with a manual computation of TPs, FPs etc.
+I also added code for using a Trainer, uncomment it and use that if you want (I surely like it more like that).
+
+#### inference.py
+A very simple inference interface, that runs the model on a text and returns a dictionary with the output and its confidence.
+
+#### get_products.py
+Again, a very simple script that uses the CSV file to grab the URLs stored there, run the inference on each one (and its links)
+and create a dictionary with the inference result for every one of them, stored as a JSON file. I added an example of this file
+in `outputs/out.json`.

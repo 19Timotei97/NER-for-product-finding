@@ -69,10 +69,8 @@ class NERproductFinder:
         with torch.no_grad():
 
             # shape: [batch_size, seq_len]
-            ids = torch.tensor(inputs['input_ids']).unsqueeze(
-                0).to(self.device, dtype=torch.long)
-            mask = torch.tensor(inputs['attention_mask']).unsqueeze(
-                0).to(self.device, dtype=torch.long)
+            ids = torch.tensor(inputs['input_ids']).unsqueeze(0).to(self.device, dtype=torch.long)
+            mask = torch.tensor(inputs['attention_mask']).unsqueeze(0).to(self.device, dtype=torch.long)
 
             outputs = self.model(ids, mask)
             output = torch.sigmoid(outputs)[0].item()
