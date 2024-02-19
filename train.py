@@ -23,7 +23,13 @@ parser.add_argument('--nb_of_epochs', type=int, default=25, required=False)
 parser.add_argument('--batch_size', type=int, default=16, required=False)
 
 
-def train():
+def train() -> None:
+    """The main function, starts the training process.
+
+    This could have been much better structured, but the experiments were done using the Jupyter Notebook that was
+        created and run in Google Colab.
+
+    """
     args = parser.parse_args()
 
     # Read the labeled dataset
@@ -137,7 +143,7 @@ def train():
             "accuracy": results["overall_accuracy"],
         }
 
-    # Looks like I also need a custom dataset
+    # Looks like I also need a custom dataset for the Trainer.
     class CustomNERDataset(torch.utils.data.Dataset):
         def __init__(self, dataset):
             self.tokens = dataset['tokens']
@@ -185,6 +191,7 @@ def train():
 
     logging.info("Starting training...")
     trainer.train()
+
 
 if __name__ == '__main__':
     train()

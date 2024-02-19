@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import trafilatura
 import argparse
 import logging
+from typing import List
 
 # Just asked ChatGPT what are the most recognized furniture types - certainly this is not the full list
 furniture_products = ['sofa', 'couch', 'settee', 'chair', 'table', 'bed',
@@ -26,12 +27,24 @@ parser.add_argument('--path_to_save_csv', type=str, default='dataset.csv')
 
 
 class DatasetCreator:
-    def __init__(self, urls):
+    def __init__(self, urls: List[str]):
+        """Creates a custom dataset based on the information gathered from the urls
+
+        Args:
+            urls (List[str]): A list of URLs from which pages will be crawled
+        """
         self.urls = urls
         self.ssl_context = ssl.SSLContext()
         self.header = {'User-Agent': 'Mozilla/5.0'}
 
-    def get_all_linked_furnitures_websites(self, url: str) -> list:
+    def get_all_linked_furnitures_websites(self, url: str) -> List[str]:
+        """Retrieves all the links related to furniture products from an url.
+        Limited to 6 links for the PoC.
+
+        Args:
+            url (str): The url in question
+        :return: A list of links related to furniture products from the given url
+        """
         # Start with the main url in the list.
         linked_furniture_urls = [url]
         logging.info(f"Trying url {url}...")
@@ -65,10 +78,14 @@ class DatasetCreator:
 
         return linked_furniture_urls[:6]
 
-    def get_urls(self):
+    def get_urls(self) -> List[str]:
+        """Get a list of urls and related furniture products links
+
+        :return: The list of URL's and possibly interesting links
+        """
         if 0 == len(self.urls):
             logging.error("Please upload a valid list of urls (At least one!)")
-            return
+            return []
 
         # List of lists of urls
         url_with_urls = [self.get_all_linked_furnitures_websites(url) for url in self.urls]
@@ -81,7 +98,13 @@ class DatasetCreator:
 # Tried many ways using bs4, which is cool, but rather difficult to tune to fit best
 # Found this amazing thingy, trafilatura which does exactly what I want
 # https://trafilatura.readthedocs.io/en/latest/quickstart.html
-def get_content_from_url(url) -> str:
+def get_content_from_url(url: str) -> str:
+    """Crawl a single url and retrieve its content
+
+    Args:
+        url (str): The url to be crawled
+    :return: The string representation of the URL's content
+    """
     html = trafilatura.fetch_url(url)
     url_content = re.sub(r" +", " ", str(trafilatura.extract(html, include_comments=False)))
 
@@ -90,7 +113,10 @@ def get_content_from_url(url) -> str:
     return url_content[:512]
 
 
-def label_dataset():
+def label_dataset() -> None:
+    """The main function of this script, responsible with the dataset creation (a csv file)
+
+    """
     args = parser.parse_args()
 
     # Gather the links

@@ -9,13 +9,13 @@ logger = logging.getLogger('furniture-trf-logger')
 
 
 class NERproductFinder:
-    """A small interface for inference which abstracts some details
+    """A small inference interface which abstracts some details
     """
 
-    SUPPORTED_TOKENIZERS = ['distilbert-base-uncased']
-    SUPPORTED_BACKBONES = ['distilbert-base-uncased']
+    SUPPORTED_TOKENIZERS = ['distilbert-base-uncased', 'distilroberta-base']
+    SUPPORTED_BACKBONES = ['distilbert-base-uncased', 'distilroberta-base']
 
-    def __init__(self, device: Any, checkpoint: Optional[str], backbone: torch.nn.Module, tokenizer: Any):
+    def __init__(self, device: Any, checkpoint: Optional[str], backbone: str, tokenizer: Any):
         """Initializes a transformer model and offers high level access
 
         Args:

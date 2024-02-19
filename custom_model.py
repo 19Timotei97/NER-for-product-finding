@@ -30,17 +30,12 @@ class NERModel(torch.nn.Module):
         )
 
         # extracts last hidden states of BERT which will be needed for classification
-        hidden_states = base_output.hidden_states
-        hidden_state = hidden_states[-1]
+        hidden_state = base_output.hidden_states[-1]
 
         # [batch_size, seq_len, hidden_size] -> get first seq item (CLS)
         cls_token = hidden_state[:, 0, :]
 
-        # cls_token = self.fc_h1(cls_token)
-        # cls_token = torch.nn.functional.gelu(cls_token)
-        #
-        # output = self.fc_out(cls_token)
-
+        # Get the result from the added FC layers
         output = self.fc_out(torch.nn.functional.gelu(self.fc_h1(cls_token)))
 
         return output[:, 0]

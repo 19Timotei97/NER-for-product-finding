@@ -9,12 +9,12 @@ from typing import Optional, List
 
 
 class Crawler:
-    """Initialize the web crawler
+    def __init__(self, html_tags: List[str]):
+        """Creates the web crawler
 
-    Args:
-        html_tags (List[str]): list of html tags that may contain useful information
-    """
-    def __init__(self, html_tags: List[str]) -> None:
+        Args:
+            html_tags (List[str]): list of html tags that may contain useful information
+        """
         self.html_tags = list(set(html_tags + ['a']))
         self.ssl_context = ssl.SSLContext()
         self.header = {'User-Agent': 'Mozilla/5.0'}
@@ -68,9 +68,11 @@ class Crawler:
         # map 'about' to 'https://sth.tld/about'
         abs_addr = f'{parent_scheme}://{parent_hostname}/{rel_addr}'
         logging.info(f"Converted [{rel_addr}] -> [{abs_addr}]")
+        print(f"Converted [{rel_addr}] -> [{abs_addr}]")
 
         abs_addr_test = urljoin(url, rel_addr.get('href'))
         logging.info(f"Converted [{rel_addr}] -> [{abs_addr_test}]")
+        print(f"Converted [{rel_addr}] -> [{abs_addr_test}]")
 
         return abs_addr
 
@@ -78,7 +80,7 @@ class Crawler:
         """Crawls the targeted URL and continues by discovering links in the given page
 
         Args:
-            url (str): target URL for crawling
+            url (str): the URL for crawling
             max_depth (int, optional): the maximum depth for BFS crawling. Defaults to 0.
             max_urls (Optional[int], optional): a maximum number of URLS to discover and crawl automatically.
                                                 Defaults to None.
@@ -92,34 +94,42 @@ class Crawler:
         urls_queue.add((url, max_depth))
         visited = {url: True}
 
+        # Retrieve the hostname
         parent_hostname = self.get_hostname(url)
         parent_scheme = 'https' if 'https' in url else 'http'
 
         results = []
 
+        # Start crawling while there's still urls in the queue
         while len(urls_queue) > 0:
             (curr_url, curr_depth) = urls_queue.pop()
 
+            # Get the info from the url
             curr_result = self.crawl_page(url=curr_url)
 
+            # Check if we can still go in depth
             num_urls += 1
             if max_urls is not None and num_urls >= max_urls:
                 break
 
+            # Check if we have other links
             if curr_depth > 0 and 'a' in curr_result['tags']:
 
+                # Start going through each link
                 for a_link in curr_result['tags']['a']:
 
                     curr_a_link = a_link
                     crt_a_link_hostname = self.get_hostname(curr_a_link)
 
-                    # convert to absolute url format
+                    # Convert to absolute url format
                     if crt_a_link_hostname is None:
                         curr_a_link = self.get_absolute_from_relative_url(
                             curr_a_link, parent_scheme, parent_hostname, a_link)
 
+                    # Mark the link as being visited if not already
                     if curr_a_link not in visited:
                         if self.get_hostname(curr_a_link) == parent_hostname:
+                            # Add the link with its depth
                             urls_queue.add((curr_a_link, curr_depth - 1))
                             visited[curr_a_link] = True
 
@@ -144,8 +154,11 @@ class Crawler:
         # queries the target URL
         response = None
         try:
+            # 2 ways of accessing an url:
+            # 1. Using requests
             response = requests.get(url, verify=False, headers=self.header, timeout=10)
 
+            # 2. Using urllib's request
             req = urllib.request.Request(url, headers=self.header)
             html = urllib.request.urlopen(req, context=self.ssl_context).read()
         except Exception as request_exception:
@@ -153,16 +166,19 @@ class Crawler:
                 f'Failed to crawl [{url}]: {str(request_exception)}')
             return result
 
+        # Either way works
         # soup = BeautifulSoup(response.text, "html.parser")
         soup = BeautifulSoup(html, 'html.parser')
 
-        # locates HTML tags of interest within the page and extracts values
+        # Locates HTML tags of interest within the page and extracts values
         possible_tags = soup.find_all(self.html_tags)
 
+        # Go through each tag
         for possible_tag in possible_tags:
             tag_name = possible_tag.name
             tag_text = possible_tag.text.strip()
 
+            # Get the link if it's a 'a' tag
             if possible_tag.name == 'a':
                 href_location = possible_tag.get('href')
 
@@ -170,9 +186,11 @@ class Crawler:
                     continue
                 tag_text = href_location
 
+            # Check if we didn't check the tag already
             if tag_name not in result['tags']:
                 result['tags'][tag_name] = []
 
+            # Create the result object
             result['status'] = response.status_code
             # result['status'] = req.status_code
             result['tags'][tag_name].append(tag_text)

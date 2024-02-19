@@ -12,15 +12,21 @@ from predict import Predictor
 
 app = Flask(__name__, template_folder=r'.\templates')
 
+"""
+For visualization purposes, I created an extremely basic web app with Flask in order to
+    input an URL, run the inference, display the JSON object with the identified products and
+    give the option to download the result as a JSON file.
+"""
+
 
 # Define app routes
-# Main route:
+# 'Main' route:
 @app.route('/')
 def index():
     return render_template('index.html')
 
 
-# Process URL route:
+# 'Process URL' route
 @app.route('/process-url', methods=['POST'])
 def process_url():
     url = request.form.get('url')
@@ -39,7 +45,7 @@ def process_url():
 
             # Followed by pages from all links in the url
             for link in links_in_url:
-                # Similar to what join in Python does, it combines a main url with the hyperlink -> absolute link
+                # Combine a main url with the hyperlink -> absolute link
                 link = urljoin(url, link.get('href'))
 
                 link_content = get_content_from_url(link)
@@ -62,7 +68,7 @@ def process_url():
     return "Got error: No URL provided to predict entities!"
 
 
-# Download results as JSON route
+# 'Download results as JSON' route
 @app.route('/download-json', methods=['POST'])
 def download_json():
     # parse json data

@@ -25,6 +25,7 @@ class CrawlingDataset(Dataset):
     def __len__(self) -> int:
         return len(self.text)
 
+    # Found some ideas on how to achieve data augmentation techniques for the given task: NER for furniture products
     def random_trim(self, text: str) -> str:
         """Randomly takes the part before a `-` (dash) and skips the rest
 
@@ -34,7 +35,7 @@ class CrawlingDataset(Dataset):
         Returns:
             str: the possibly modified text
         """
-        if random.uniform(0, 1) < 0.3:
+        if random.uniform(0, 1) < 0.5:
             text = text.split('-')[0]
 
         return text
@@ -51,7 +52,7 @@ class CrawlingDataset(Dataset):
         """
         if random.uniform(0, 1) < 0.04:
             text = ''.join(random.choices(string.printable, k=random.randint(1, 10)))
-            label = 0
+            label = 0  # Not a product
 
         return text, label
 
@@ -65,7 +66,7 @@ class CrawlingDataset(Dataset):
         Returns:
             Tuple(str, int): a possibly modified text & label
         """
-        if random.uniform(0, 1) > .3:
+        if random.uniform(0, 1) > 0.5:
             return text, label
 
         text = text.split(' ')
@@ -85,10 +86,12 @@ class CrawlingDataset(Dataset):
         text = self.text[idx]
         label = self.label[idx]
 
+        # Apply data augmentation
         text = self.random_trim(text)
         text, label = self.random_delete(text, label)
         text, label = self.random_noise(text, label)
 
+        # Achieve the tokenized result
         inputs = self.tokenizer.encode_plus(
             text,
             None,
@@ -113,9 +116,9 @@ def load_dataset(json_path: str, tokenizer: Any, max_len: int, split_percent: fl
 
     Args:
         json_path (str): path to the JSON-formatted datasets
-        tokenizer (Any): the tokenizer which is to be used
+        tokenizer (Any): the tokenizer to be used
         max_len (int): maximum seq len for a sample
-        split_percent (float, optional): percent of samples used for training. Defaults to 0.8)
+        split_percent (float, optional): percent of samples used for training. Defaults to 0.8.
 
     Returns:
         Tuple(TextDataset, TextDataset, float): (train_dataset, val_dataset, neg_to_pos_ratio)
@@ -132,9 +135,10 @@ def load_dataset(json_path: str, tokenizer: Any, max_len: int, split_percent: fl
             json_content = json.load(f)
 
             for seq, label in json_content.items():
-
+                # Get rid of the trailing dots
                 crt_seq = seq.replace('...', '')
 
+                # Split the dataset into train and val
                 if random.uniform(0, 1) < split_percent:
                     train_inputs.append(crt_seq)
                     train_targets.append(1 if label else 0)
@@ -148,7 +152,8 @@ def load_dataset(json_path: str, tokenizer: Any, max_len: int, split_percent: fl
                     val_inputs.append(crt_seq)
                     val_targets.append(1 if label else 0)
 
-    for i in range(int(neg_samples * 0.3)):
+    # Add 'not a product' sequences to the train inputs
+    for _ in range(int(neg_samples * 0.3)):
         random_seq_len = random.randint(1, 30)
         neg_seq = random.choices(negative_words_pool, k=random_seq_len)
 

@@ -12,19 +12,30 @@ parser.add_argument('--path_for_text_file', type=str, default='good_links.txt')
 
 class LinkChecker:
     def __init__(self, csv_file: str):
+        """Creates a link checker object
+
+        Args:
+            csv_file (str): A csv file containing urls
+        """
         self.csv_file = csv_file
         self.links = []  # All links from csv file
         self.not_working_links = []  # not reachable at all
         self.good_links = []  # Sites which returned HTTP codes != 200 (OK)
         self.bad_links = []  # Sites which returned code 200
 
-    def get_links_from_csv(self):
+    def get_links_from_csv(self) -> None:
+        """Retrieves the urls from the csv file (with an expected structure) and populates internal list.
+
+        """
         df = pd.read_csv(self.csv_file)
         self.links = [df['max(page)'][i] for i in range(len(df))]
 
         logging.info(f"Got {len(self.links)} total links\n")
 
-    def check_links(self):
+    def check_links(self) -> None:
+        """Verifies each link and populates the corresponding list
+
+        """
         if len(self.links) == 0:
             logging.error("Make sure to run get_links_from_csv before running this method!")
 
@@ -53,7 +64,12 @@ class LinkChecker:
 
                     self.bad_links.append(link_)
 
-    def write_good_links_to_txt(self, path: str):
+    def write_good_links_to_txt(self, path: str) -> None:
+        """Creates a helper text file with the reachable links
+
+        Args:
+            path (str): The path where to save the text file
+        """
         if 0 == len(self.good_links):
             logging.warning("No good links found!")
             return
@@ -62,7 +78,10 @@ class LinkChecker:
             file.writelines(self.good_links)
 
 
-def start_checking_links():
+def start_checking_links() -> None:
+    """The main link checking operation
+
+    """
     args = parser.parse_args()
 
     link_checker = LinkChecker(args.path_to_csv)

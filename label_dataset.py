@@ -22,11 +22,21 @@ parser.add_argument('--path_to_save_labeled_csv', type=str, default='labeled_dat
 
 class DatasetLabeller:
     def __init__(self, csv):
+        """Instantiates a dataset labeller
+
+        Args:
+            csv (str): A csv document with the url and its content
+        """
         self.csv = csv
         self.ssl = ssl.SSLContext()
 
     # This method could very well be outside the class, but wanted to keep the code kinda organized
-    def grab_url_title(self, url):
+    def grab_url_title(self, url: str) -> str:
+        """Retrieves the URL title, to be used in the labelling strategy
+
+        Args:
+            url (str): The URL whose title will be grabbed
+        """
         req = request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         html = request.urlopen(req, context=self.ssl).read()
 
@@ -46,9 +56,10 @@ class DatasetLabeller:
 
             return ""
 
-    def label_url_content(self, csv_to_be_saved):
-        """
-        Strategy for labeling products from the pages
+    def label_url_content(self, csv_to_be_saved: str) -> None:
+        """Labels the content from a certain URL and saves the labelled texts in a new CSV file.
+
+        Strategy for labeling products from the pages:
 
         For each link in the csv file:
             1. Get its title -> using BeautifulSoup or similar
@@ -57,6 +68,9 @@ class DatasetLabeller:
             4. Create a label of '0' (OUTSIDE) for the length of words list:
                 4.1 If we got a word from the title -> label as 'B-PRODUCT'
                 4.2 If the previous token label was 1 or 2 ('I-PRODUCT') and got a word from the title -> label as 'I-PRODUCT'
+
+        Args:
+            csv_to_be_saved (str): The path to a new CSV file with the labelled texts.
         """
         df = pd.read_csv(self.csv)
 
@@ -108,7 +122,10 @@ class DatasetLabeller:
                   index=False)
 
 
-def label_dataset():
+def label_dataset() -> None:
+    """The main function for the script, starting the labeller.
+
+    """
     args = parser.parse_args()
 
     labeler = DatasetLabeller(args.path_to_csv)

@@ -1,5 +1,6 @@
 # Step 5
 # I should use the model to predict some entities from the unseen pages
+from typing import List, Dict
 import ssl
 import urllib.request
 from urllib.parse import urljoin
@@ -21,11 +22,19 @@ parser.add_argument('--path_to_save_json_result_file', type=str)
 # https://huggingface.co/docs/transformers/tasks/token_classification
 class Predictor:
     def __init__(self):
+        """Creates a very simple predictor, for testing the model
+
+        """
         self.ssl_context = ssl.SSLContext()
         self.header = {'User-Agent': 'Mozilla/5.0'}
         self.ner = pipeline("ner", model="TimoteiB/DistilBERT_NER_furniture")
 
-    def grab_url_pages(self, url):
+    def grab_url_links(self, url: str) -> List[str]:
+        """Retrieves the links from a URL given as an argument.
+
+        Args:
+            url (str): The URL from which the links will be grabbed
+        """
         # Grab the url of that first page
         urls_in_url = [url]
 
@@ -36,15 +45,21 @@ class Predictor:
         # Find all links / pages in a URL
         links_in_url = soup.find_all('a')  # get all a-href
 
-        # Grab them in a list
         for link in links_in_url:
+            # Create an absolute path to the link
             internal_url = urljoin(url, link.get('href'))
 
+            # Add them to the list
             urls_in_url.append(internal_url)
 
         return urls_in_url
 
-    def predict_ner(self, urls):
+    def predict_ner(self, urls: List[str]) -> Dict:
+        """The method used to run inference on the content of URLs
+
+        Args:
+            urls (List[str]): A list of URLs to be tested
+        """
         # The complexity of this method is horrible, but it's just for testing the model
         entities_in_urls = {}
 
@@ -52,7 +67,7 @@ class Predictor:
             logging.info(f"Got url {url}\n...")
 
             # Retrieve the list of urls from a main url
-            url_list = self.grab_url_pages(url)
+            url_list = self.grab_url_links(url)
             logging.info(f"Got {len(url_list)} urls from the main url")
             url_entities = []
 
@@ -63,6 +78,7 @@ class Predictor:
 
                 entities = []
                 for sentence in content_sentences:
+                    # Run the inference pipeline on the content
                     preds = self.ner(sentence)
 
                     logging.info(f"Got predictions: {preds}")
@@ -82,14 +98,17 @@ class Predictor:
 
         return entities_in_urls
 
-    # TODO: create method to grab pages from a URL and do inference on that
+    def predict_ner_page(self, text: str) -> List[str]:
+        """Runs inference pipeline on a single page
 
-    def predict_ner_page(self, text):
+        Args:
+            text (str): The page on which inference will be run
+        """
         entities = []
 
         # TODO: remove code repetition, use code from 'predict_ner'
         # TODO: check how to create a more elegant solution to this
-        # limit to the maximum length of the model
+        # Limit to the maximum length of the model
         if len(text) > 512:
             text = text[:512]
         preds = self.ner(text)
